@@ -1,7 +1,9 @@
-package korbas.runs;
+package korbas.runs.repository;
 
+import korbas.runs.App;
 import korbas.runs.database.Connector;
 import korbas.runs.domain.TableData;
+import korbas.runs.entity.Run;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -9,22 +11,14 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class App {
+public class RunRepository extends Connector {
 
-    public static void main(String[] args) {
-        Statement statement = null;
-        ResultSet resultSet = null;
+    private Statement statement = null;
+    private ResultSet resultSet = null;
 
-        System.out.println("Działa!");
-        try {
-            // The newInstance() call is a work around for some
-            // broken Java implementations
-            Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
-//            Class.forName("com.mysql.jdbc.Driver").newInstance();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        Connection connection = new Connector().getConnection();
+    public List<Run> getAllRuns() {
+        String sql = "";
+        Connection connection = getConnection();
         try {
             if (connection != null) {
                 statement = connection.createStatement();
@@ -66,23 +60,8 @@ public class App {
             // Call warning method
             logger.warning(ex.getLocalizedMessage());
         } finally {
-            if (resultSet != null) {
-                try {
-                    resultSet.close();
-                } catch (SQLException sqlEx) {
-                } // ignore
-
-                resultSet = null;
-            }
-
-            if (statement != null) {
-                try {
-                    statement.close();
-                } catch (SQLException sqlEx) {
-                } // ignore
-
-                statement = null;
-            }
+            closeConnection(resultSet, statement);
         }
+        return null;
     }
 }
