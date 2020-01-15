@@ -2,49 +2,41 @@ package korbas.runs.repository;
 
 import korbas.runs.App;
 import korbas.runs.database.Connector;
-import korbas.runs.domain.TableData;
 import korbas.runs.entity.Run;
+import korbas.runs.utils.DateUtils;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class RunRepository extends Connector {
-
     private Statement statement = null;
     private ResultSet resultSet = null;
 
     public List<Run> getAllRuns() {
-        String sql = "";
+        List<Run> runs = new ArrayList<>();
+        String sql = "SELECT * FROM runs";
         Connection connection = getConnection();
         try {
             if (connection != null) {
                 statement = connection.createStatement();
 
-                if (statement.execute("SELECT * FROM runs")) {
+                if (statement.execute(sql)) {
                     resultSet = statement.getResultSet();
-                    ResultSetMetaData metaData = resultSet.getMetaData();
-                    List<String> labels = new ArrayList<>();
-                    List<List<String>> rows = new ArrayList<>();
-                    int columnCount = metaData.getColumnCount();
-                    boolean firstRow = true;
+
                     while (resultSet.next()) {
-                        List<String> row = new ArrayList<>();
-                        for (int i = 1; i <= columnCount; i++) {
-                            row.add(resultSet.getString(i));
-                            if (firstRow) {
-                                labels.add(metaData.getColumnLabel(i));
-                            }
-                        }
-                        firstRow = false;
-                        rows.add(row);
+                        runs.add(
+                                createRun()
+                        );
                     }
-                    TableData tableData = new TableData(labels, rows);
-                    System.out.println(tableData.toString());
                 }
             }
+            return runs;
         } catch (SQLException exception) {
             System.out.println("SQLException: " + exception.getMessage());
             System.out.println("SQLState: " + exception.getSQLState());
@@ -63,5 +55,23 @@ public class RunRepository extends Connector {
             closeConnection(resultSet, statement);
         }
         return null;
+    }
+
+    private Run createRun() throws SQLException {
+        return new Run(
+                resultSet.getInt("ID_RUN"),
+                resultSet.getString("name"),
+                DateUtils.convertDateToLocalDate(resultSet.getDate("rundate")),
+                resultSet.getDouble("distance"),
+                resultSet.getInt("przewyzszenia"),
+                resultSet.getString("opis"),
+                resultSet.getInt("limit_uczestnikow"),
+                resultSet.getString("iframe"),
+                resultSet.getBoolean("isactive"),
+                resultSet.getString("googlemap"),
+                resultSet.getInt("sezon"),
+                resultSet.getString("lokacja"),
+                resultSet.getString("historia")
+        );
     }
 }
